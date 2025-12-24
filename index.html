@@ -22,7 +22,8 @@
         .brutalist-shadow { box-shadow: 4px 4px 0px #000; }
         
         .xray-mode { cursor: none; }
-        .xray-mode * { cursor: none; }
+        .xray-mode *:not(.easter-egg):not(.easter-egg *) { cursor: none; }
+        .easter-egg, .easter-egg * { cursor: auto !important; }
         
         /* Overlay - fixed layer, pointer-events none */
         .xray-overlay {
@@ -217,6 +218,145 @@
         }
         .sound-toggle:hover { background: #333; }
         .sound-toggle.muted { opacity: 0.5; }
+        
+        /* Marquee chửi */
+        .marquee-container {
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: #000; color: #FFDE59; 
+            padding: 8px 0; z-index: 9000;
+            overflow: hidden; border-top: 3px solid #FFDE59;
+        }
+        .marquee {
+            display: flex; width: max-content;
+            animation: marquee 40s linear infinite;
+        }
+        .marquee span {
+            padding: 0 50px; font-weight: 700; font-size: 14px;
+            white-space: nowrap;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .marquee-container:hover .marquee { animation-play-state: paused; }
+        .marquee a { color: #FF5757; text-decoration: underline; cursor: pointer; }
+        .marquee a:hover { color: #fff; }
+        
+        /* Floating shapes - real LP vibes */
+        .floating-shape {
+            position: absolute; pointer-events: none; opacity: 0.15;
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        /* Subtle grain texture */
+        body::before {
+            content: ''; position: fixed; inset: 0; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03; z-index: 9999;
+        }
+        
+        /* Hover lift effect */
+        .brutalist-shadow { transition: all 0.2s ease; }
+        .brutalist-shadow:hover { 
+            box-shadow: 6px 6px 0px #000; 
+            transform: translate(-2px, -2px); 
+        }
+        
+        /* Text highlight animation */
+        .highlight-text {
+            background: linear-gradient(120deg, #FFDE59 0%, #FFDE59 100%);
+            background-repeat: no-repeat;
+            background-size: 0% 100%;
+            animation: highlight 1s ease forwards;
+            animation-delay: 0.5s;
+        }
+        @keyframes highlight {
+            to { background-size: 100% 100%; }
+        }
+        
+        /* Pulse on CTA */
+        @keyframes pulse-shadow {
+            0%, 100% { box-shadow: 4px 4px 0px #000; }
+            50% { box-shadow: 4px 4px 0px #000, 0 0 20px rgba(255,222,89,0.5); }
+        }
+        .pulse-cta { animation: pulse-shadow 2s ease-in-out infinite; }
+        
+        /* Scroll animations */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .scroll-reveal.from-left {
+            transform: translateX(-40px);
+        }
+        .scroll-reveal.from-left.revealed {
+            transform: translateX(0);
+        }
+        .scroll-reveal.from-right {
+            transform: translateX(40px);
+        }
+        .scroll-reveal.from-right.revealed {
+            transform: translateX(0);
+        }
+        .scroll-reveal.scale-up {
+            transform: scale(0.9);
+        }
+        .scroll-reveal.scale-up.revealed {
+            transform: scale(1);
+        }
+        
+        /* Stagger children */
+        .stagger-children > * {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .stagger-children.revealed > *:nth-child(1) { transition-delay: 0.1s; }
+        .stagger-children.revealed > *:nth-child(2) { transition-delay: 0.2s; }
+        .stagger-children.revealed > *:nth-child(3) { transition-delay: 0.3s; }
+        .stagger-children.revealed > *:nth-child(4) { transition-delay: 0.4s; }
+        .stagger-children.revealed > * {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Tony avatar fixed */
+        .tony-avatar {
+            position: fixed; bottom: 60px; right: 20px; z-index: 8000;
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 3px solid #000; cursor: pointer;
+            box-shadow: 4px 4px 0 #000;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            background: #FFDE59;
+        }
+        .tony-avatar:hover {
+            transform: scale(1.1) rotate(-5deg);
+            box-shadow: 6px 6px 0 #000;
+        }
+        .tony-avatar img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .tony-avatar::after {
+            content: '👋'; position: absolute; top: -8px; right: -8px;
+            background: #FF5757; border: 2px solid #000;
+            border-radius: 50%; width: 24px; height: 24px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .tony-avatar { width: 50px; height: 50px; bottom: 70px; right: 12px; }
+        }
     </style>
 </head>
 <body class="bg-paper min-h-screen">
@@ -251,10 +391,11 @@
         <div class="xray-annotation alt" data-for="hero-trust" style="bottom:80px;right:5%">🤝 <b>TRUST:</b> Ai dùng rồi? (Kể cả bịa 😏)</div>
         
         <div class="max-w-4xl mx-auto text-center relative">
-            <div class="absolute -top-8 -left-8 w-16 h-16 bg-accent border-4 border-black rotate-12"></div>
-            <div class="absolute -bottom-8 -right-8 w-14 h-14 bg-danger border-4 border-black rounded-full"></div>
+            <div class="floating-shape absolute -top-8 -left-8 w-16 h-16 bg-accent border-4 border-black rotate-12"></div>
+            <div class="floating-shape absolute -bottom-8 -right-8 w-14 h-14 bg-danger border-4 border-black rounded-full" style="animation-delay: -2s;"></div>
+            <div class="floating-shape absolute top-1/2 -right-16 w-8 h-8 bg-success border-3 border-black rotate-45 hidden md:block" style="animation-delay: -4s; border-width: 3px;"></div>
             
-            <div class="xray-target inline-block bg-success text-black font-bold px-4 py-2 border-4 border-black brutalist-shadow mb-6 -rotate-2" data-area="hero-badge">🔥 Landing Page Thật Thà Nhất VN</div>
+            <div class="xray-target scroll-reveal inline-block bg-success text-black font-bold px-4 py-2 border-4 border-black brutalist-shadow mb-6 -rotate-2" data-area="hero-badge">🔥 Landing Page Thật Thà Nhất VN</div>
             
             <h1 class="xray-target font-heading text-4xl md:text-6xl font-bold leading-tight mb-6" data-area="hero-headline">
                 Chào bạn, đây là <span class="bg-accent px-3 rotate-1 inline-block">Landing Page</span><br><span class="text-danger">Thật Thà</span> đầu tiên!
@@ -263,7 +404,7 @@
             <p class="text-lg md:text-xl text-gray-700 mb-8 max-w-xl mx-auto">Tui chỉ cho bạn <strong>mọi thủ thuật</strong> landing page dùng để bạn bấm nút.<br>Và bạn vẫn sẽ bấm. Tin tui đi. 🫠</p>
             
             <div class="xray-target flex flex-col sm:flex-row gap-3 justify-center" data-area="hero-cta">
-                <button class="bg-black text-white font-heading font-bold text-lg px-6 py-3 border-4 border-black brutalist-shadow cursor-pointer hover:bg-accent hover:text-black transition-all">Bấm Vào Đây! 👈</button>
+                <button class="bg-black text-white font-heading font-bold text-lg px-6 py-3 border-4 border-black brutalist-shadow pulse-cta cursor-pointer hover:bg-accent hover:text-black transition-all">Bấm Vào Đây! 👈</button>
                 <button class="bg-white text-black font-heading font-bold text-lg px-6 py-3 border-4 border-black brutalist-shadow cursor-pointer hover:bg-gray-100 transition-all">Hoặc Không</button>
             </div>
             
@@ -289,7 +430,7 @@
                 <h2 class="font-heading text-3xl md:text-5xl font-bold mb-4">Bạn có biết... 😱</h2>
                 <p class="text-gray-400">(Phần doạ bạn để thấy cần giải pháp)</p>
             </div>
-            <div class="xray-target grid md:grid-cols-3 gap-4" data-area="problem-cards">
+            <div class="xray-target stagger-children grid md:grid-cols-3 gap-4" data-area="problem-cards">
                 <div class="bg-danger p-5 border-4 border-white"><div class="text-4xl mb-3">😤</div><h3 class="font-heading font-bold mb-1">LP không convert?</h3><p class="text-red-100 text-sm">Tốn tuần design, không ai bấm.</p></div>
                 <div class="bg-gray-800 p-5 border-4 border-white"><div class="text-4xl mb-3">💸</div><h3 class="font-heading font-bold mb-1">Ads không lead?</h3><p class="text-gray-300 text-sm">Tiền đi, inbox trống.</p></div>
                 <div class="bg-gray-800 p-5 border-4 border-white"><div class="text-4xl mb-3">🤯</div><h3 class="font-heading font-bold mb-1">Blank page?</h3><p class="text-gray-300 text-sm">Nhìn màn hình trắng...</p></div>
@@ -312,7 +453,7 @@
                 <div class="inline-block bg-white font-bold px-4 py-2 border-4 border-black brutalist-shadow mb-4 rotate-1">✨ NHƯNG KHOAN...</div>
                 <h2 class="font-heading text-3xl md:text-5xl font-bold">Nếu có cách để...</h2>
             </div>
-            <div class="xray-target grid md:grid-cols-2 gap-4" data-area="solution-benefits">
+            <div class="xray-target stagger-children grid md:grid-cols-2 gap-4" data-area="solution-benefits">
                 <div class="bg-white p-5 border-4 border-black brutalist-shadow flex gap-3"><div class="bg-accent w-10 h-10 border-[3px] border-black flex items-center justify-center font-bold shrink-0">✓</div><div><h3 class="font-heading font-bold">Hiểu cấu trúc LP</h3><p class="text-gray-600 text-sm">Biết mỗi section làm gì.</p></div></div>
                 <div class="bg-white p-5 border-4 border-black brutalist-shadow flex gap-3"><div class="bg-accent w-10 h-10 border-[3px] border-black flex items-center justify-center font-bold shrink-0">✓</div><div><h3 class="font-heading font-bold">Viết copy như form</h3><p class="text-gray-600 text-sm">Công thức = không blank page.</p></div></div>
                 <div class="bg-white p-5 border-4 border-black brutalist-shadow flex gap-3"><div class="bg-accent w-10 h-10 border-[3px] border-black flex items-center justify-center font-bold shrink-0">✓</div><div><h3 class="font-heading font-bold">Tăng conversion</h3><p class="text-gray-600 text-sm">Biết đặt CTA đâu, viết gì.</p></div></div>
@@ -332,12 +473,12 @@
                 <h2 class="font-heading text-3xl md:text-5xl font-bold mb-3">Mọi Người Nói Gì?</h2>
                 <p class="text-gray-500">(Người lạ khen để bạn tin)</p>
             </div>
-            <div class="xray-target grid md:grid-cols-3 gap-4" data-area="proof-testimonials">
+            <div class="xray-target stagger-children grid md:grid-cols-3 gap-4" data-area="proof-testimonials">
                 <div class="bg-white p-5 border-4 border-black brutalist-shadow"><div class="text-accent text-3xl mb-3">"</div><p class="text-gray-700 text-sm mb-4">Hiểu tại sao LP không ai bấm. Thiếu section doạ! 😂</p><div class="flex items-center gap-3"><div class="w-10 h-10 bg-gray-300 border-[3px] border-black rounded-full flex items-center justify-center font-bold">A</div><div><div class="font-heading font-bold text-sm">Designer A</div><div class="text-xs text-gray-400">UI/UX</div></div></div></div>
                 <div class="bg-white p-5 border-4 border-black brutalist-shadow rotate-1"><div class="text-accent text-3xl mb-3">"</div><p class="text-gray-700 text-sm mb-4">Giờ biết mỗi pixel đều có lý do!</p><div class="flex items-center gap-3"><div class="w-10 h-10 bg-success border-[3px] border-black rounded-full flex items-center justify-center font-bold">M</div><div><div class="font-heading font-bold text-sm">Marketer M</div><div class="text-xs text-gray-400">Growth</div></div></div></div>
                 <div class="bg-white p-5 border-4 border-black brutalist-shadow -rotate-1"><div class="text-accent text-3xl mb-3">"</div><p class="text-gray-700 text-sm mb-4">Vibe coder giờ cũng làm LP chuẩn! 🔥</p><div class="flex items-center gap-3"><div class="w-10 h-10 bg-accent border-[3px] border-black rounded-full flex items-center justify-center font-bold">C</div><div><div class="font-heading font-bold text-sm">Coder C</div><div class="text-xs text-gray-400">Vibe</div></div></div></div>
             </div>
-            <div class="xray-target mt-12 grid grid-cols-2 md:grid-cols-4 gap-3" data-area="proof-stats">
+            <div class="xray-target stagger-children mt-12 grid grid-cols-2 md:grid-cols-4 gap-3" data-area="proof-stats">
                 <div class="bg-accent p-4 border-4 border-black text-center brutalist-shadow"><div class="font-heading text-3xl font-bold">69+</div><div class="text-xs">Học viên</div></div>
                 <div class="bg-white p-4 border-4 border-black text-center brutalist-shadow"><div class="font-heading text-3xl font-bold">420%</div><div class="text-xs">Tăng CVR*</div></div>
                 <div class="bg-white p-4 border-4 border-black text-center brutalist-shadow"><div class="font-heading text-3xl font-bold">∞</div><div class="text-xs">Giờ saved</div></div>
@@ -359,7 +500,7 @@
                 <h2 class="font-heading text-3xl md:text-5xl font-bold mb-3">Chọn Gói</h2>
                 <p class="text-gray-500">(Đoán xem chọn gói nào? ...Đúng rồi 😏)</p>
             </div>
-            <div class="grid md:grid-cols-3 gap-4 items-start">
+            <div class="stagger-children grid md:grid-cols-3 gap-4 items-start">
                 <div class="xray-target bg-white p-6 border-4 border-black brutalist-shadow" data-area="price-decoy">
                     <div class="text-xs font-bold text-gray-400 mb-1">CƠ BẢN</div>
                     <div class="font-heading text-3xl font-bold mb-4">199K</div>
@@ -394,7 +535,7 @@
                 <h2 class="font-heading text-3xl md:text-5xl font-bold mb-3">FAQ</h2>
                 <p class="text-gray-500">(Tui tự hỏi, tự trả lời)</p>
             </div>
-            <div class="xray-target space-y-3" data-area="faq-items">
+            <div class="xray-target stagger-children space-y-3" data-area="faq-items">
                 <div class="bg-white p-4 border-4 border-black brutalist-shadow cursor-pointer" onclick="this.querySelector('.ans').classList.toggle('hidden')"><div class="flex justify-between items-center"><h3 class="font-heading font-bold">Không code, học được không?</h3><span class="text-xl">+</span></div><div class="ans hidden mt-3 pt-3 border-t-2 border-black text-gray-600 text-sm">Được! Đây về tư duy, không code!</div></div>
                 <div class="bg-white p-4 border-4 border-black brutalist-shadow cursor-pointer" onclick="this.querySelector('.ans').classList.toggle('hidden')"><div class="flex justify-between items-center"><h3 class="font-heading font-bold">Sản phẩm thật không?</h3><span class="text-xl">+</span></div><div class="ans hidden mt-3 pt-3 border-t-2 border-black text-gray-600 text-sm">Không! 😂 Demo thôi. Kiến thức thì THẬT!</div></div>
                 <div class="bg-white p-4 border-4 border-black brutalist-shadow cursor-pointer" onclick="this.querySelector('.ans').classList.toggle('hidden')"><div class="flex justify-between items-center"><h3 class="font-heading font-bold">Sao không free?</h3><span class="text-xl">+</span></div><div class="ans hidden mt-3 pt-3 border-t-2 border-black text-gray-600 text-sm">Bạn ĐANG xem free! Bật X-Ray là xong! 🎓</div></div>
@@ -476,6 +617,23 @@
         </div>
     </div>
     <div id="confettiContainer"></div>
+    
+    <!-- Marquee chửi -->
+    <div class="marquee-container">
+        <div class="marquee">
+            <span>🔥 Trang này dạy bạn cách bị thao túng. Muốn chửi ông làm trang này? 👉 <a href="https://www.facebook.com/tony.40047" target="_blank">facebook.com/tony.40047</a> 👈 🔥</span>
+            <span>😏 "Tui biết hết trick của bạn rồi!" — Bạn, sau khi xem trang này 😏</span>
+            <span>🎯 Kết bạn với Tony để học thêm: <a href="https://www.facebook.com/tony.40047" target="_blank">facebook.com/tony.40047</a> 🎯</span>
+            <span>🔥 Trang này dạy bạn cách bị thao túng. Muốn chửi ông làm trang này? 👉 <a href="https://www.facebook.com/tony.40047" target="_blank">facebook.com/tony.40047</a> 👈 🔥</span>
+            <span>😏 "Tui biết hết trick của bạn rồi!" — Bạn, sau khi xem trang này 😏</span>
+            <span>🎯 Kết bạn với Tony để học thêm: <a href="https://www.facebook.com/tony.40047" target="_blank">facebook.com/tony.40047</a> 🎯</span>
+        </div>
+    </div>
+    
+    <!-- Tony Avatar Fixed -->
+    <div class="tony-avatar" onclick="showEasterEgg()" title="Bấm để xem bí mật!">
+        <img src="https://uploads.aigency.asia/ab6b3ca8-5607-432b-8d33-a96775eac710.jpeg" alt="Tony">
+    </div>
 
     <script>
         let audioCtx = null, soundEnabled = true;
@@ -518,7 +676,9 @@
             if (soundEnabled) { initAudio(); playTing(); }
         }
         
-        let xrayOn = false, sectionsViewed = new Set(), easterEggShown = false, touchActive = false, lastAnn = null;
+        let xrayOn = false, sectionsViewed = new Set(), touchActive = false, lastAnn = null;
+        let easterEggShown = false;
+        let autoPopupShown = sessionStorage.getItem('autoPopupShown') === 'true';
         const msgs = {
             hero: { m: "🎯 HERO: Hook 3 giây!", c: "3... 2... 1... Còn đây hả? Tốt! 👀" },
             problem: { m: "😱 PROBLEM: Doạ bạn đây!", c: "Đau chưa? Chưa thì đọc lại nha 😈" },
@@ -543,9 +703,18 @@
             document.getElementById('progressText').textContent = `${sectionsViewed.size}/8`;
             if (sectionsViewed.size >= 8 && xrayOn && !easterEggShown) setTimeout(showEasterEgg, 800);
         }
-        function showEasterEgg() {
-            if (easterEggShown) return; 
+        function showEasterEgg(isAuto = false) {
+            // Auto popup chỉ 1 lần per session
+            if (isAuto && autoPopupShown) return;
+            
+            // Nếu đang hiện rồi thì thôi
+            if (easterEggShown) return;
+            
             easterEggShown = true;
+            if (isAuto) {
+                autoPopupShown = true;
+                sessionStorage.setItem('autoPopupShown', 'true');
+            }
             
             const eggEl = document.getElementById('easterEgg');
             const shellEl = document.getElementById('eggShell');
@@ -649,15 +818,26 @@
         document.addEventListener('keydown', e => { if (e.key.toLowerCase() === 'x') toggleXray(); });
         document.addEventListener('click', () => initAudio(), { once: true });
         
+        // Scroll Reveal Observer
+        const scrollRevealObs = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                }
+            });
+        }, { threshold: 0.15 });
+        
+        document.querySelectorAll('.scroll-reveal, .stagger-children').forEach(el => {
+            scrollRevealObs.observe(el);
+        });
+        
         // Exit Intent Detection
-        let exitIntentShown = false;
         
         // Desktop: Mouse leave viewport (top)
         document.addEventListener('mouseleave', e => {
-            if (e.clientY < 10 && !easterEggShown && !exitIntentShown) {
-                exitIntentShown = true;
+            if (e.clientY < 10 && !autoPopupShown) {
                 initAudio();
-                showEasterEgg();
+                showEasterEgg(true);
             }
         });
         
@@ -671,10 +851,9 @@
             // Ở gần top và scroll lên nhanh
             if (currentY < 100 && lastScrollY > currentY && lastScrollY - currentY > 30) {
                 scrollUpCount++;
-                if (scrollUpCount >= 2 && !easterEggShown && !exitIntentShown) {
-                    exitIntentShown = true;
+                if (scrollUpCount >= 2 && !autoPopupShown) {
                     initAudio();
-                    showEasterEgg();
+                    showEasterEgg(true);
                 }
             } else {
                 scrollUpCount = 0;
