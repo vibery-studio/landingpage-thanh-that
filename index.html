@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page Thật Thà 😏 - X-Ray Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { heading: ['Space Grotesk', 'sans-serif'], body: ['Archivo', 'sans-serif'] },
+                    colors: { primary: '#000', accent: '#FFDE59', danger: '#FF5757', success: '#4ADE80', paper: '#FFFBEB', xray: '#00FF88' }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Archivo', sans-serif; }
+        h1, h2, h3, .font-heading { font-family: 'Space Grotesk', sans-serif; }
+        .brutalist-shadow { box-shadow: 4px 4px 0px #000; }
+        
+        .xray-mode { cursor: none; }
+        .xray-mode * { cursor: none; }
+        
+        /* Overlay - fixed layer, pointer-events none */
+        .xray-overlay {
+            position: fixed; inset: 0; 
+            background: rgba(0,0,0,0.5);
+            pointer-events: none; 
+            z-index: 100; 
+            opacity: 0; 
+            transition: opacity 0.3s;
+        }
+        .xray-mode .xray-overlay { opacity: 1; }
+        
+        /* Annotations - z-index cao hơn overlay */
+        .xray-annotation {
+            position: absolute; background: #00FF88; color: #000; border: 3px solid #000;
+            padding: 12px 16px; font-size: 13px; font-weight: 600; 
+            z-index: 200;
+            opacity: 0; transform: scale(0.9) rotate(-1deg); 
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none; max-width: 260px; line-height: 1.5; box-shadow: 4px 4px 0 #000;
+        }
+        
+        /* Flashlight */
+        .flashlight {
+            position: fixed; width: 350px; height: 350px; pointer-events: none; z-index: 150;
+            transform: translate(-50%, -50%); opacity: 0; transition: opacity 0.3s;
+            background: radial-gradient(circle, rgba(0,255,136,0.25) 0%, rgba(0,255,136,0.1) 25%, transparent 60%);
+            border-radius: 50%; mix-blend-mode: screen;
+        }
+        .xray-mode .flashlight { opacity: 1; }
+        
+        /* Crosshair */
+        .crosshair {
+            position: fixed; width: 30px; height: 30px; pointer-events: none; z-index: 300;
+            transform: translate(-50%, -50%); opacity: 0;
+        }
+        .xray-mode .crosshair { opacity: 1; }
+        .crosshair::before, .crosshair::after { content: ''; position: absolute; background: #00FF88; box-shadow: 0 0 10px #00FF88; }
+        .crosshair::before { width: 2px; height: 30px; left: 50%; transform: translateX(-50%); }
+        .crosshair::after { width: 30px; height: 2px; top: 50%; transform: translateY(-50%); }
+        .xray-annotation.show { opacity: 1; transform: scale(1) rotate(-1deg); }
+        .xray-annotation.alt { transform: scale(0.9) rotate(1deg); }
+        .xray-annotation.alt.show { transform: scale(1) rotate(1deg); }
+        
+        .section-label {
+            position: absolute; left: 0; top: 0; background: #00FF88; color: #000;
+            padding: 8px 16px; font-weight: 700; font-size: 11px; text-transform: uppercase;
+            letter-spacing: 1.5px; opacity: 0; transition: opacity 0.3s; z-index: 100;
+            border-right: 3px solid #000; border-bottom: 3px solid #000;
+        }
+        .xray-mode .section-label { opacity: 1; }
+        
+        .scan-lines {
+            position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.015) 2px, rgba(0,255,136,0.015) 4px);
+            pointer-events: none; z-index: 45; opacity: 0; transition: opacity 0.3s;
+        }
+        .xray-mode .scan-lines { opacity: 1; }
+        
+        .xray-glow { 
+            filter: grayscale(0) brightness(1.1) !important;
+            box-shadow: 0 0 40px rgba(0,255,136,0.6), inset 0 0 20px rgba(0,255,136,0.1) !important; 
+            outline: 3px solid #00FF88 !important; position: relative; z-index: 60;
+        }
+        
+        .narrator-bar {
+            position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%);
+            background: #000; color: #00FF88; border: 3px solid #00FF88;
+            padding: 12px 24px; z-index: 9500; transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; align-items: center; gap: 16px; font-size: 14px;
+            max-width: 95%; white-space: nowrap; box-shadow: 0 0 30px rgba(0,255,136,0.3);
+        }
+        .xray-mode .narrator-bar { bottom: 16px; }
+        .narrator-bar .progress { font-weight: 700; padding-right: 16px; border-right: 2px solid #00FF88; }
+        .narrator-bar .message { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+        
+        .random-comment {
+            position: fixed; z-index: 9600; background: #FFDE59; color: #000;
+            padding: 12px 20px; border: 3px solid #000; font-weight: 600;
+            font-size: 14px; box-shadow: 4px 4px 0 #000; opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: scale(0.8) translateY(10px); pointer-events: none; max-width: 280px;
+        }
+        .random-comment.show { opacity: 1; transform: scale(1) translateY(0); }
+        
+        /* Easter egg - Trứng nở */
+        .easter-egg {
+            position: fixed; inset: 0; z-index: 10000; display: flex; 
+            align-items: center; justify-content: center; padding: 20px;
+            background: rgba(0,0,0,0.9); opacity: 0; pointer-events: none; transition: opacity 0.5s;
+        }
+        .easter-egg.revealed { opacity: 1; pointer-events: auto; }
+        
+        .egg-container { position: relative; }
+        
+        /* Trứng */
+        .egg-shell { position: relative; cursor: pointer; }
+        .egg {
+            width: 120px; height: 160px; position: relative;
+            animation: egg-wobble 0.5s ease-in-out;
+        }
+        .egg-top {
+            position: absolute; top: 0; left: 0; right: 0; height: 80px;
+            background: #FFDE59; border: 4px solid #000;
+            border-radius: 60px 60px 0 0;
+            transform-origin: bottom center;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .egg-top::before {
+            content: ''; position: absolute; top: 100%; left: -4px; right: -4px; height: 12px;
+            background: linear-gradient(90deg, #000 0%, #000 8%, transparent 8%, transparent 18%, #000 18%, #000 28%, transparent 28%, transparent 38%, #000 38%, #000 48%, transparent 48%, transparent 58%, #000 58%, #000 68%, transparent 68%, transparent 78%, #000 78%, #000 88%, transparent 88%);
+        }
+        .egg-bottom {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 90px;
+            background: #FFDE59; border: 4px solid #000;
+            border-radius: 0 0 50px 50px;
+        }
+        .egg-shadow {
+            width: 100px; height: 20px; background: rgba(0,0,0,0.3);
+            border-radius: 50%; margin: 20px auto 0;
+        }
+        
+        /* Trứng nở animation */
+        .egg-shell.cracking .egg { animation: egg-shake 0.15s ease-in-out 4; }
+        .egg-shell.hatched .egg-top { transform: rotate(-45deg) translateY(-30px) translateX(-30px); }
+        .egg-shell.hatched { animation: egg-fly-away 0.8s ease-out forwards; }
+        
+        @keyframes egg-wobble {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+        @keyframes egg-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px) rotate(-3deg); }
+            75% { transform: translateX(8px) rotate(3deg); }
+        }
+        @keyframes egg-fly-away {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5) translateY(-100px); }
+        }
+        
+        /* Nội dung sau khi nở */
+        .egg-content {
+            display: none; position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%);
+            width: 90vw; max-width: 480px;
+        }
+        .egg-content.show { 
+            display: block; 
+            animation: content-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes content-pop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        .easter-egg-content {
+            background: linear-gradient(135deg, #FFDE59 0%, #FFB800 100%);
+            border: 4px solid #000; padding: 32px; position: relative;
+            box-shadow: 8px 8px 0px #000;
+        }
+        
+        .easter-egg-badge {
+            position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+            background: #4ADE80; color: #000; padding: 8px 20px;
+            font-weight: 700; font-size: 13px; border: 3px solid #000; white-space: nowrap;
+        }
+        
+        .achievement { background: #000; color: #00FF88; border: 3px solid #00FF88; padding: 16px; text-align: center; margin-top: 16px; }
+        .achievement-title { font-size: 12px; opacity: 0.7; margin-bottom: 4px; }
+        .achievement-name { font-size: 18px; font-weight: 700; }
+        
+        .confetti { position: fixed; pointer-events: none; z-index: 10001; }
+        @keyframes confetti-fall { 0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(1080deg); opacity: 0; } }
+        
+        @media (max-width: 768px) {
+            .flashlight, .crosshair { display: none; }
+            .xray-annotation { font-size: 12px; padding: 10px 14px; max-width: 220px; }
+            .narrator-bar { bottom: -100px; padding: 10px 16px; font-size: 13px; flex-direction: column; gap: 8px; text-align: center; white-space: normal; }
+            .narrator-bar .progress { border-right: none; padding-right: 0; }
+            .xray-mode .narrator-bar { bottom: 12px; }
+            .easter-egg-content { padding: 24px 20px; }
+        }
+        
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+        
+        .sound-toggle {
+            position: fixed; top: 12px; right: 12px; z-index: 9999;
+            background: #000; color: #fff; border: 2px solid #fff;
+            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 20px; transition: all 0.2s;
+        }
+        .sound-toggle:hover { background: #333; }
+        .sound-toggle.muted { opacity: 0.5; }
+    </style>
+</head>
+<body class="bg-paper min-h-screen">
+    <!-- Overlay fixed layer -->
+    <div class="xray-overlay"></div>
+    <div class="scan-lines"></div>
+    <div class="flashlight" id="flashlight"></div>
+    <div class="crosshair" id="crosshair"></div>
+    
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔊</button>
+    
+    <div class="fixed top-3 left-3 z-[9999]">
+        <button id="toggleBtn" onclick="toggleXray()" class="bg-black text-xray font-heading font-bold px-5 py-3 border-[3px] border-xray cursor-pointer hover:bg-xray hover:text-black transition-all flex items-center gap-2">
+            <span id="toggleIcon">🔬</span><span class="hidden sm:inline" id="toggleText">Bật X-Ray</span>
+        </button>
+        <div class="text-xs mt-1 text-gray-400 hidden sm:block">Phím tắt: X</div>
+    </div>
+    
+    <div class="narrator-bar" id="narratorBar">
+        <div class="progress">🔬 <span id="progressText">0/8</span></div>
+        <div class="message" id="narratorMessage">Di chuột để soi bí mật...</div>
+    </div>
+    
+    <div class="random-comment" id="randomComment"></div>
+
+    <!-- HERO -->
+    <section class="xray-content relative min-h-screen flex items-center justify-center px-4 py-16" data-section="hero" data-index="1">
+        <div class="section-label">01 / HERO</div>
+        <div class="xray-annotation" data-for="hero-badge" style="top:100px;left:5%">🔥 <b>BADGE:</b> Tạo FOMO — "Nhất", "Đầu tiên"</div>
+        <div class="xray-annotation alt" data-for="hero-headline" style="top:220px;right:5%">🎯 <b>HEADLINE:</b> 3 giây để hook!</div>
+        <div class="xray-annotation" data-for="hero-cta" style="bottom:200px;left:5%">👆 <b>CTA:</b> Màu nổi nhất trang!</div>
+        <div class="xray-annotation alt" data-for="hero-trust" style="bottom:80px;right:5%">🤝 <b>TRUST:</b> Ai dùng rồi? (Kể cả bịa 😏)</div>
+        
+        <div class="max-w-4xl mx-auto text-center relative">
+            <div class="absolute -top-8 -left-8 w-16 h-16 bg-accent border-4 border-black rotate-12"></div>
+            <div class="absolute -bottom-8 -right-8 w-14 h-14 bg-danger border-4 border-black rounded-full"></div>
+            
+            <div class="xray-target inline-block bg-success text-black font-bold px-4 py-2 border-4 border-black brutalist-shadow mb-6 -rotate-2" data-area="hero-badge">🔥 Landing Page Thật Thà Nhất VN</div>
+            
+            <h1 class="xray-target font-heading text-4xl md:text-6xl font-bold leading-tight mb-6" data-area="hero-headline">
+                Chào bạn, đây là <span class="bg-accent px-3 rotate-1 inline-block">Landing Page</span><br><span class="text-danger">Thật Thà</span> đầu tiên!
+            </h1>
+            
+            <p class="text-lg md:text-xl text-gray-700 mb-8 max-w-xl mx-auto">Tui chỉ cho bạn <strong>mọi thủ thuật</strong> landing page dùng để bạn bấm nút.<br>Và bạn vẫn sẽ bấm. Tin tui đi. 🫠</p>
+            
+            <div class="xray-target flex flex-col sm:flex-row gap-3 justify-center" data-area="hero-cta">
+                <button class="bg-black text-white font-heading font-bold text-lg px-6 py-3 border-4 border-black brutalist-shadow cursor-pointer hover:bg-accent hover:text-black transition-all">Bấm Vào Đây! 👈</button>
+                <button class="bg-white text-black font-heading font-bold text-lg px-6 py-3 border-4 border-black brutalist-shadow cursor-pointer hover:bg-gray-100 transition-all">Hoặc Không</button>
+            </div>
+            
+            <div class="xray-target mt-10 flex flex-wrap justify-center gap-4 opacity-50 text-sm" data-area="hero-trust">
+                <span class="font-bold">Tin dùng bởi:</span>
+                <span class="bg-gray-200 px-3 py-1 border-2 border-black">Mẹ Tui</span>
+                <span class="bg-gray-200 px-3 py-1 border-2 border-black">Bạn Tui</span>
+                <span class="bg-gray-200 px-3 py-1 border-2 border-black">Con Mèo</span>
+            </div>
+        </div>
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg></div>
+    </section>
+
+    <!-- PROBLEM -->
+    <section class="xray-content relative py-20 px-4 bg-black text-white" data-section="problem" data-index="2">
+        <div class="section-label" style="background:#FF5757">02 / PROBLEM</div>
+        <div class="xray-annotation" data-for="problem-title" style="top:60px;right:5%;background:#FF5757;color:#fff">😱 <b>MỤC ĐÍCH:</b> Làm bạn thấy đời đang tệ!</div>
+        <div class="xray-annotation alt" data-for="problem-cards" style="top:50%;left:5%;background:#FF5757;color:#fff">💢 <b>3 NỖI ĐAU:</b> Thời gian + Tiền + Cảm xúc</div>
+        <div class="xray-annotation" data-for="problem-amp" style="bottom:60px;right:5%;background:#FF5757;color:#fff">🔥 <b>AMPLIFY:</b> "Đối thủ đã biết" = FOMO!</div>
+        
+        <div class="max-w-4xl mx-auto">
+            <div class="xray-target text-center mb-12" data-area="problem-title">
+                <h2 class="font-heading text-3xl md:text-5xl font-bold mb-4">Bạn có biết... 😱</h2>
+                <p class="text-gray-400">(Phần doạ bạn để thấy cần giải pháp)</p>
+            </div>
+            <div class="xray-target grid md:grid-cols-3 gap-4" data-area="problem-cards">
+                <div class="bg-danger p-5 border-4 border-white"><div class="text-4xl mb-3">😤</div><h3 class="font-heading font-bold mb-1">LP không convert?</h3><p class="text-red-100 text-sm">Tốn tuần design, không ai bấm.</p></div>
+                <div class="bg-gray-800 p-5 border-4 border-white"><div class="text-4xl mb-3">💸</div><h3 class="font-heading font-bold mb-1">Ads không lead?</h3><p class="text-gray-300 text-sm">Tiền đi, inbox trống.</p></div>
+                <div class="bg-gray-800 p-5 border-4 border-white"><div class="text-4xl mb-3">🤯</div><h3 class="font-heading font-bold mb-1">Blank page?</h3><p class="text-gray-300 text-sm">Nhìn màn hình trắng...</p></div>
+            </div>
+            <div class="xray-target mt-10 text-center" data-area="problem-amp">
+                <p class="text-xl font-heading font-bold text-accent">Điều tệ nhất?</p>
+                <p class="text-gray-300 mt-2"><span class="line-through">Đối thủ cũng không biết</span><br><span class="text-danger font-bold">Đối thủ ĐÃ BIẾT! 🔥</span></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOLUTION -->
+    <section class="xray-content relative py-20 px-4 bg-success" data-section="solution" data-index="3">
+        <div class="section-label">03 / SOLUTION</div>
+        <div class="xray-annotation" data-for="solution-twist" style="top:60px;left:5%">🎬 <b>PLOT TWIST:</b> "Nhưng khoan" = Sợ → Hy vọng!</div>
+        <div class="xray-annotation alt" data-for="solution-benefits" style="top:50%;right:5%">✨ <b>BENEFITS:</b> Động từ mạnh + kết quả!</div>
+        
+        <div class="max-w-4xl mx-auto">
+            <div class="xray-target text-center mb-12" data-area="solution-twist">
+                <div class="inline-block bg-white font-bold px-4 py-2 border-4 border-black brutalist-shadow mb-4 rotate-1">✨ NHƯNG KHOAN...</div>
+                <h2 class="font-heading text-3xl md:text-5xl font-bold">Nếu có cách để...</h2>
+            </div>
+            <div class="xray-target grid md:grid-cols-2 gap-4" data-area="solution-benefits">
+                <div class="bg-white p-5 border-4 border-black brutalist-shadow flex gap-3"><div class="bg-accent w-10 h-10 border-[3px] border-black flex items-center justify-center font-bold shrink-0">✓</div><div><h3 class="font-heading font-bold">Hiểu cấu trúc LP</h3><p class="text-gray-600 text-sm">Biết mỗi section làm gì.</p></div></div>
+                <div class="bg-white p-5 border-4 border-black brutalist-shadow flex gap-3"><div class="bg-accent w-10 h-10 border-[3px] border-black flex items-center justify-center font-bold shrink-0">✓</div><div><h3 class="font-heading font-bold">Viết copy như form</h3><p class="text-gray-600 text-sm">Công thức = không blank page.</p></div></div>
+                <div class="bg-white p-5 border-4 border-black brutalist-shadow flex gap-3"><div class="bg-accent w-10 h-10 border-[3px] border-black flex items-center justify-center font-bold shrink-0">✓</div><div><h3 class="font-heading font-bold">Tăng conversion</h3><p class="text-gray-600 text-sm">Biết đặt CTA đâu, viết gì.</p></div></div>
+                <div class="bg-white p-5 border-4 border-black brutalist-shadow flex gap-3"><div class="bg-accent w-10 h-10 border-[3px] border-black flex items-center justify-center font-bold shrink-0">✓</div><div><h3 class="font-heading font-bold">Flex với team</h3><p class="text-gray-600 text-sm">"Đây là decoy pricing..." 😎</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOCIAL PROOF -->
+    <section class="xray-content relative py-20 px-4 bg-paper" data-section="proof" data-index="4">
+        <div class="section-label">04 / PROOF</div>
+        <div class="xray-annotation" data-for="proof-testimonials" style="top:160px;left:5%">🗣️ <b>TESTIMONIALS:</b> Ảnh + Tên + Role = Trust x3!</div>
+        <div class="xray-annotation alt" data-for="proof-stats" style="bottom:140px;right:5%">📊 <b>STATS:</b> Số lẻ gây chú ý hơn!</div>
+        
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="font-heading text-3xl md:text-5xl font-bold mb-3">Mọi Người Nói Gì?</h2>
+                <p class="text-gray-500">(Người lạ khen để bạn tin)</p>
+            </div>
+            <div class="xray-target grid md:grid-cols-3 gap-4" data-area="proof-testimonials">
+                <div class="bg-white p-5 border-4 border-black brutalist-shadow"><div class="text-accent text-3xl mb-3">"</div><p class="text-gray-700 text-sm mb-4">Hiểu tại sao LP không ai bấm. Thiếu section doạ! 😂</p><div class="flex items-center gap-3"><div class="w-10 h-10 bg-gray-300 border-[3px] border-black rounded-full flex items-center justify-center font-bold">A</div><div><div class="font-heading font-bold text-sm">Designer A</div><div class="text-xs text-gray-400">UI/UX</div></div></div></div>
+                <div class="bg-white p-5 border-4 border-black brutalist-shadow rotate-1"><div class="text-accent text-3xl mb-3">"</div><p class="text-gray-700 text-sm mb-4">Giờ biết mỗi pixel đều có lý do!</p><div class="flex items-center gap-3"><div class="w-10 h-10 bg-success border-[3px] border-black rounded-full flex items-center justify-center font-bold">M</div><div><div class="font-heading font-bold text-sm">Marketer M</div><div class="text-xs text-gray-400">Growth</div></div></div></div>
+                <div class="bg-white p-5 border-4 border-black brutalist-shadow -rotate-1"><div class="text-accent text-3xl mb-3">"</div><p class="text-gray-700 text-sm mb-4">Vibe coder giờ cũng làm LP chuẩn! 🔥</p><div class="flex items-center gap-3"><div class="w-10 h-10 bg-accent border-[3px] border-black rounded-full flex items-center justify-center font-bold">C</div><div><div class="font-heading font-bold text-sm">Coder C</div><div class="text-xs text-gray-400">Vibe</div></div></div></div>
+            </div>
+            <div class="xray-target mt-12 grid grid-cols-2 md:grid-cols-4 gap-3" data-area="proof-stats">
+                <div class="bg-accent p-4 border-4 border-black text-center brutalist-shadow"><div class="font-heading text-3xl font-bold">69+</div><div class="text-xs">Học viên</div></div>
+                <div class="bg-white p-4 border-4 border-black text-center brutalist-shadow"><div class="font-heading text-3xl font-bold">420%</div><div class="text-xs">Tăng CVR*</div></div>
+                <div class="bg-white p-4 border-4 border-black text-center brutalist-shadow"><div class="font-heading text-3xl font-bold">∞</div><div class="text-xs">Giờ saved</div></div>
+                <div class="bg-success p-4 border-4 border-black text-center brutalist-shadow"><div class="font-heading text-3xl font-bold">5⭐</div><div class="text-xs">Rating</div></div>
+            </div>
+            <p class="text-center text-xs text-gray-400 mt-3">*Số bịa. Ai đọc disclaimer đâu 🤫</p>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="xray-content relative py-20 px-4 bg-gray-100" data-section="pricing" data-index="5">
+        <div class="section-label">05 / PRICING</div>
+        <div class="xray-annotation" data-for="price-decoy" style="top:200px;left:3%">🎣 <b>DECOY:</b> Gói này để gói giữa đẹp hơn!</div>
+        <div class="xray-annotation alt" data-for="price-popular" style="top:320px;right:3%">⭐ <b>POPULAR:</b> Scale + Badge = Não chọn cái này!</div>
+        <div class="xray-annotation" data-for="price-anchor" style="bottom:200px;right:3%">⚓ <b>ANCHOR:</b> Đắt để giữa trông rẻ!</div>
+        
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="font-heading text-3xl md:text-5xl font-bold mb-3">Chọn Gói</h2>
+                <p class="text-gray-500">(Đoán xem chọn gói nào? ...Đúng rồi 😏)</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4 items-start">
+                <div class="xray-target bg-white p-6 border-4 border-black brutalist-shadow" data-area="price-decoy">
+                    <div class="text-xs font-bold text-gray-400 mb-1">CƠ BẢN</div>
+                    <div class="font-heading text-3xl font-bold mb-4">199K</div>
+                    <ul class="space-y-2 mb-6 text-sm"><li class="flex gap-2"><span class="text-success">✓</span>Ebook</li><li class="flex gap-2"><span class="text-success">✓</span>5 Template</li><li class="flex gap-2 text-gray-300"><span>✗</span>Video</li><li class="flex gap-2 text-gray-300"><span>✗</span>Community</li></ul>
+                    <button class="w-full bg-gray-200 font-bold py-2 border-4 border-black cursor-pointer hover:bg-gray-300 transition-all">Chọn</button>
+                </div>
+                <div class="xray-target bg-accent p-6 border-4 border-black brutalist-shadow md:scale-105 relative z-10" data-area="price-popular">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-danger text-white px-4 py-1 border-[3px] border-black text-xs font-bold">🔥 PHỔ BIẾN</div>
+                    <div class="text-xs font-bold text-gray-600 mb-1 mt-2">PRO</div>
+                    <div class="font-heading text-3xl font-bold mb-4">499K</div>
+                    <ul class="space-y-2 mb-6 text-sm"><li class="flex gap-2"><span class="font-bold">✓</span>Ebook</li><li class="flex gap-2"><span class="font-bold">✓</span>20+ Template</li><li class="flex gap-2"><span class="font-bold">✓</span>Video</li><li class="flex gap-2"><span class="font-bold">✓</span>Community</li></ul>
+                    <button class="w-full bg-black text-white font-bold py-2 border-4 border-black brutalist-shadow cursor-pointer hover:bg-gray-800 transition-all">Chọn 👈</button>
+                </div>
+                <div class="xray-target bg-white p-6 border-4 border-black brutalist-shadow" data-area="price-anchor">
+                    <div class="text-xs font-bold text-gray-400 mb-1">ENTERPRISE</div>
+                    <div class="font-heading text-3xl font-bold mb-4">2.999K</div>
+                    <ul class="space-y-2 mb-6 text-sm"><li class="flex gap-2"><span class="text-success">✓</span>Tất cả Pro</li><li class="flex gap-2"><span class="text-success">✓</span>1-on-1</li><li class="flex gap-2"><span class="text-success">✓</span>Custom</li><li class="flex gap-2"><span class="text-success">✓</span>Priority</li></ul>
+                    <button class="w-full bg-gray-200 font-bold py-2 border-4 border-black cursor-pointer hover:bg-gray-300 transition-all">Liên hệ</button>
+                </div>
+            </div>
+            <div class="mt-10 text-center"><div class="inline-block bg-success px-6 py-3 border-4 border-black brutalist-shadow"><div class="font-heading font-bold">💯 Hoàn Tiền 7 Ngày</div><div class="text-sm">Giảm risk = tăng conversion!</div></div></div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="xray-content relative py-20 px-4 bg-paper" data-section="faq" data-index="6">
+        <div class="section-label">06 / FAQ</div>
+        <div class="xray-annotation alt" data-for="faq-items" style="top:160px;right:5%">❓ <b>OBJECTIONS:</b> Tự hỏi tự trả lời! Sneaky 🐍</div>
+        
+        <div class="max-w-3xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="font-heading text-3xl md:text-5xl font-bold mb-3">FAQ</h2>
+                <p class="text-gray-500">(Tui tự hỏi, tự trả lời)</p>
+            </div>
+            <div class="xray-target space-y-3" data-area="faq-items">
+                <div class="bg-white p-4 border-4 border-black brutalist-shadow cursor-pointer" onclick="this.querySelector('.ans').classList.toggle('hidden')"><div class="flex justify-between items-center"><h3 class="font-heading font-bold">Không code, học được không?</h3><span class="text-xl">+</span></div><div class="ans hidden mt-3 pt-3 border-t-2 border-black text-gray-600 text-sm">Được! Đây về tư duy, không code!</div></div>
+                <div class="bg-white p-4 border-4 border-black brutalist-shadow cursor-pointer" onclick="this.querySelector('.ans').classList.toggle('hidden')"><div class="flex justify-between items-center"><h3 class="font-heading font-bold">Sản phẩm thật không?</h3><span class="text-xl">+</span></div><div class="ans hidden mt-3 pt-3 border-t-2 border-black text-gray-600 text-sm">Không! 😂 Demo thôi. Kiến thức thì THẬT!</div></div>
+                <div class="bg-white p-4 border-4 border-black brutalist-shadow cursor-pointer" onclick="this.querySelector('.ans').classList.toggle('hidden')"><div class="flex justify-between items-center"><h3 class="font-heading font-bold">Sao không free?</h3><span class="text-xl">+</span></div><div class="ans hidden mt-3 pt-3 border-t-2 border-black text-gray-600 text-sm">Bạn ĐANG xem free! Bật X-Ray là xong! 🎓</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="xray-content relative py-20 px-4 bg-black text-white" data-section="cta" data-index="7">
+        <div class="section-label" style="background:#FF5757">07 / CTA</div>
+        <div class="xray-annotation" data-for="final-btn" style="top:45%;right:5%;background:#FF5757;color:#fff">🚀 <b>LAST CHANCE:</b> Size TO + Màu nổi + Copy liều!</div>
+        
+        <div class="max-w-3xl mx-auto text-center">
+            <h2 class="font-heading text-3xl md:text-5xl font-bold mb-4">Scroll tới đây rồi! 👀</h2>
+            <p class="text-gray-300 mb-8">Khả năng cao bạn quan tâm thật.<br>Hoặc tò mò xem cuối có gì...</p>
+            <div class="xray-target inline-block" data-area="final-btn"><button onclick="showEasterEgg()" class="bg-accent text-black font-heading font-bold text-xl px-10 py-5 border-4 border-white brutalist-shadow cursor-pointer hover:bg-yellow-300 transition-all">Bấm Đi, Tui Biết Bạn Muốn! 🤪</button></div>
+            <p class="text-gray-500 text-sm mt-6">*Không có gì xảy ra. Demo thôi 😉</p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="xray-content bg-gray-900 text-white py-12 px-4 relative" data-section="footer" data-index="8">
+        <div class="section-label" style="background:#FFDE59;color:#000">08 / FOOTER</div>
+        <div class="xray-annotation alt" data-for="footer-content" style="bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff">👟 <b>FOOTER:</b> 3% người đọc tới đây. Respect 🫡</div>
+        
+        <div class="xray-target max-w-5xl mx-auto text-center" data-area="footer-content">
+            <div class="font-heading font-bold text-lg mb-2">Landing Page Thật Thà 🫠</div>
+            <p class="text-gray-400 text-sm mb-4">Dự án giáo dục về cấu trúc LP</p>
+            <p class="text-gray-500 text-xs">© 2025 • Made with 🫠</p>
+            <p class="text-xray text-sm mt-4 font-bold">Bấm 🔬 X-Ray góc trái để học!</p>
+        </div>
+    </footer>
+
+    <!-- EASTER EGG - Trứng nở -->
+    <div class="easter-egg" id="easterEgg">
+        <div class="egg-container">
+            <!-- Trứng chưa nở -->
+            <div class="egg-shell" id="eggShell">
+                <div class="egg">
+                    <div class="egg-top"></div>
+                    <div class="egg-bottom"></div>
+                </div>
+                <div class="egg-shadow"></div>
+            </div>
+            
+            <!-- Nội dung sau khi nở -->
+            <div class="egg-content" id="eggContent">
+                <div class="easter-egg-content">
+                    <div class="easter-egg-badge">🐣 BẠN TÌM THẤY RỒI!</div>
+                    <div class="text-center pt-6">
+                        <h3 class="font-heading text-2xl font-bold mb-3">Chúc mừng bạn!</h3>
+                        <p class="text-gray-700 mb-5">Giờ bạn biết cách <strong>đọc vị</strong> mọi landing page.<br>Muốn học thêm nhiều trick khác?</p>
+                        
+                        <div class="bg-white border-4 border-black p-4 mb-5">
+                            <div class="flex items-center gap-4">
+                                <img src="https://uploads.aigency.asia/ab6b3ca8-5607-432b-8d33-a96775eac710.jpeg" alt="Tony" class="w-16 h-16 rounded-full border-[3px] border-black object-cover">
+                                <div class="text-left">
+                                    <div class="font-heading font-bold">Tony Bùi</div>
+                                    <div class="text-sm text-gray-600">Người tạo trang này</div>
+                                    <div class="text-xs text-gray-400 mt-1">15+ năm dev • AI nerd • Thích chia sẻ</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600 mb-4">Kết bạn để nhận thêm tips về<br><strong>Landing Page, AI, Marketing</strong> mỗi tuần!</p>
+                        
+                        <a href="https://www.facebook.com/tony.40047" target="_blank" rel="noopener" class="inline-block bg-[#1877F2] text-white font-heading font-bold px-8 py-4 border-4 border-black brutalist-shadow hover:brightness-110 transition-all cursor-pointer text-lg">
+                            👋 Kết Bạn Facebook
+                        </a>
+                        
+                        <p class="text-xs text-gray-400 mt-4">Không spam. Không bán gì. Chỉ chia sẻ.</p>
+                        
+                        <div class="achievement"><div class="achievement-title">🏆 ACHIEVEMENT UNLOCKED</div><div class="achievement-name">Certified LP Analyst</div></div>
+                        
+                        <button onclick="closeEasterEgg()" class="mt-5 text-gray-500 text-sm underline cursor-pointer hover:text-gray-700">Đóng lại</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="confettiContainer"></div>
+
+    <script>
+        let audioCtx = null, soundEnabled = true;
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function playTing() {
+            if (!soundEnabled || !audioCtx) return;
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+        }
+        function playReveal() {
+            if (!soundEnabled || !audioCtx) return;
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1100, audioCtx.currentTime + 0.07);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+        }
+        function playTada() {
+            if (!soundEnabled || !audioCtx) return;
+            [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => {
+                const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+            }, i * 100));
+        }
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+            document.getElementById('soundToggle').classList.toggle('muted', !soundEnabled);
+            if (soundEnabled) { initAudio(); playTing(); }
+        }
+        
+        let xrayOn = false, sectionsViewed = new Set(), easterEggShown = false, touchActive = false, lastAnn = null;
+        const msgs = {
+            hero: { m: "🎯 HERO: Hook 3 giây!", c: "3... 2... 1... Còn đây hả? Tốt! 👀" },
+            problem: { m: "😱 PROBLEM: Doạ bạn đây!", c: "Đau chưa? Chưa thì đọc lại nha 😈" },
+            solution: { m: "💡 SOLUTION: Plot twist!", c: "Học từ Marvel đó!" },
+            proof: { m: "🗣️ PROOF: Người lạ khen!", c: "Có thật không? Bí mật 🤫" },
+            pricing: { m: "💰 PRICING: Decoy magic!", c: "Biết chọn gói nào rồi đúng không? 😏" },
+            faq: { m: "❓ FAQ: Tự hỏi tự trả lời!", c: "'Có thật không?' - hot nhất 😂" },
+            cta: { m: "🚀 CTA: Cơ hội cuối!", c: "Tới đây mà không bấm... respect 🫡" },
+            footer: { m: "👟 FOOTER: 3% đọc tới đây!", c: "Wow. Bạn kiên nhẫn thật!" }
+        };
+        
+        function toggleXray() {
+            initAudio(); xrayOn = !xrayOn;
+            document.body.classList.toggle('xray-mode', xrayOn);
+            document.getElementById('toggleIcon').textContent = xrayOn ? '👁️' : '🔬';
+            document.getElementById('toggleText').textContent = xrayOn ? 'Tắt X-Ray' : 'Bật X-Ray';
+            hideAll();
+            if (xrayOn) { playTing(); showComment("X-Ray ON! Soi đi~ 🔦", innerWidth/2, 120); }
+            updateProgress();
+        }
+        function updateProgress() {
+            document.getElementById('progressText').textContent = `${sectionsViewed.size}/8`;
+            if (sectionsViewed.size >= 8 && xrayOn && !easterEggShown) setTimeout(showEasterEgg, 800);
+        }
+        function showEasterEgg() {
+            if (easterEggShown) return; 
+            easterEggShown = true;
+            
+            const eggEl = document.getElementById('easterEgg');
+            const shellEl = document.getElementById('eggShell');
+            const contentEl = document.getElementById('eggContent');
+            
+            // Show overlay + egg
+            eggEl.classList.add('revealed');
+            playTing();
+            
+            // Shake egg
+            setTimeout(() => {
+                shellEl.classList.add('cracking');
+                playTing();
+            }, 300);
+            
+            // Hatch egg
+            setTimeout(() => {
+                shellEl.classList.remove('cracking');
+                shellEl.classList.add('hatched');
+                playTada();
+                createConfetti();
+            }, 900);
+            
+            // Show content
+            setTimeout(() => {
+                shellEl.style.display = 'none';
+                contentEl.classList.add('show');
+            }, 1400);
+        }
+        
+        function closeEasterEgg() { 
+            document.getElementById('easterEgg').classList.remove('revealed'); 
+            // Reset for next time
+            const shellEl = document.getElementById('eggShell');
+            const contentEl = document.getElementById('eggContent');
+            shellEl.style.display = 'block';
+            shellEl.classList.remove('cracking', 'hatched');
+            contentEl.classList.remove('show');
+            easterEggShown = false;
+            playTing(); 
+        }
+        function createConfetti() {
+            const colors = ['#FFDE59','#FF5757','#4ADE80','#00FF88','#fff','#000'];
+            for (let i = 0; i < 60; i++) {
+                const c = document.createElement('div'); c.className = 'confetti';
+                c.style.cssText = `left:${Math.random()*100}vw;top:-20px;width:${Math.random()*12+6}px;height:${Math.random()*12+6}px;background:${colors[~~(Math.random()*6)]};animation:confetti-fall ${Math.random()*2+2}s linear forwards;animation-delay:${Math.random()*0.5}s;border-radius:${Math.random()>0.5?'50%':'0'}`;
+                document.getElementById('confettiContainer').appendChild(c);
+                setTimeout(() => c.remove(), 4500);
+            }
+        }
+        function showComment(t, x, y) {
+            const el = document.getElementById('randomComment');
+            el.textContent = t;
+            el.style.left = Math.min(Math.max(x, 150), innerWidth - 150) + 'px';
+            el.style.top = Math.min(Math.max(y, 80), innerHeight - 100) + 'px';
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2500);
+        }
+        function reveal(x, y) {
+            document.querySelectorAll('.xray-annotation').forEach(a => {
+                const r = a.getBoundingClientRect(), d = Math.hypot(x - r.left - r.width/2, y - r.top - r.height/2);
+                const t = document.querySelector(`[data-area="${a.dataset.for}"]`);
+                let near = d < 180;
+                if (t) { const tr = t.getBoundingClientRect(); near = near || (x > tr.left-50 && x < tr.right+50 && y > tr.top-50 && y < tr.bottom+50); t.classList.toggle('xray-glow', near); }
+                const was = a.classList.contains('show');
+                a.classList.toggle('show', near);
+                if (near && !was && a !== lastAnn) { lastAnn = a; playReveal(); }
+            });
+        }
+        function hideAll() {
+            document.querySelectorAll('.xray-annotation').forEach(a => a.classList.remove('show'));
+            document.querySelectorAll('.xray-glow').forEach(e => e.classList.remove('xray-glow'));
+            lastAnn = null;
+        }
+        
+        document.addEventListener('mousemove', e => {
+            document.getElementById('flashlight').style.cssText = `left:${e.clientX}px;top:${e.clientY}px`;
+            document.getElementById('crosshair').style.cssText = `left:${e.clientX}px;top:${e.clientY}px`;
+            if (xrayOn) reveal(e.clientX, e.clientY);
+        });
+        
+        let lpt = null;
+        document.addEventListener('touchstart', e => { if (!xrayOn) return; const t = e.touches[0]; lpt = setTimeout(() => { touchActive = true; reveal(t.clientX, t.clientY); }, 150); }, { passive: true });
+        document.addEventListener('touchmove', e => { if (!xrayOn || !touchActive) return; reveal(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+        document.addEventListener('touchend', () => { clearTimeout(lpt); if (touchActive) { touchActive = false; hideAll(); } });
+        
+        const obs = new IntersectionObserver(entries => {
+            entries.forEach(en => {
+                if (en.isIntersecting && en.intersectionRatio > 0.4) {
+                    const s = en.target.dataset.section;
+                    if (xrayOn && s && !sectionsViewed.has(s)) {
+                        sectionsViewed.add(s); updateProgress();
+                        if (msgs[s]) setTimeout(() => showComment(msgs[s].c, Math.random()*(innerWidth-300)+150, Math.random()*200+100), 500);
+                    }
+                    if (msgs[s]) document.getElementById('narratorMessage').textContent = msgs[s].m;
+                }
+            });
+        }, { threshold: 0.4 });
+        document.querySelectorAll('[data-section]').forEach(s => obs.observe(s));
+        
+        document.addEventListener('keydown', e => { if (e.key.toLowerCase() === 'x') toggleXray(); });
+        document.addEventListener('click', () => initAudio(), { once: true });
+        
+        // Exit Intent Detection
+        let exitIntentShown = false;
+        
+        // Desktop: Mouse leave viewport (top)
+        document.addEventListener('mouseleave', e => {
+            if (e.clientY < 10 && !easterEggShown && !exitIntentShown) {
+                exitIntentShown = true;
+                initAudio();
+                showEasterEgg();
+            }
+        });
+        
+        // Mobile: Back button / scroll up fast at top
+        let lastScrollY = 0;
+        let scrollUpCount = 0;
+        
+        window.addEventListener('scroll', () => {
+            const currentY = window.scrollY;
+            
+            // Ở gần top và scroll lên nhanh
+            if (currentY < 100 && lastScrollY > currentY && lastScrollY - currentY > 30) {
+                scrollUpCount++;
+                if (scrollUpCount >= 2 && !easterEggShown && !exitIntentShown) {
+                    exitIntentShown = true;
+                    initAudio();
+                    showEasterEgg();
+                }
+            } else {
+                scrollUpCount = 0;
+            }
+            
+            lastScrollY = currentY;
+        }, { passive: true });
+    </script>
+</body>
+</html>
